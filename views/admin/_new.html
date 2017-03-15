@@ -1,0 +1,59 @@
+<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title">新用户</h4>
+		</div>
+		<div class="modal-body">
+			<form id="new-form" method="POST" action="/admin/newUser" class="form-horizontal">
+				<div class="form-group form-group-sm">
+					<label class="control-label col-xs-5" for="is_active">状态</label>
+					<div class="col-xs-7">
+						<label class="radio-inline">
+							<input type="radio" name="is_active" value="1" checked> 启用
+						</label>
+						<label class="radio-inline">
+							<input type="radio" name="is_active" value="0"> 停用
+						</label>
+					</div>
+				</div>
+				<div class="form-group form-group-sm">
+					<label class="control-label col-xs-5" for="port">端口</label>
+					<div class="col-xs-7">
+						<input type="number" class="form-control" placeholder="SS 端口" value="@model.port">
+					</div>
+					<input type="hidden" name="port" value="@model.port" />
+				</div>
+				<div class="form-group form-group-sm">
+					<label class="control-label col-xs-5" for="password">密码</label>
+					<div class="col-xs-7 input-group">
+						<input type="text" class="form-control input-sm" name="password" placeholder="SS 密码" value="@model.password">
+					</div>
+				</div>
+				<div class="form-group form-group-sm">
+					<label class="control-label col-xs-5" for="traffic_limit">流量限制(MB)</label>
+					<div class="col-xs-7">
+						<input type="number" class="form-control input-sm" name="traffic_limit" placeholder="流量限制" value="@model.traffic_limit">
+					</div>
+				</div>
+				<div class="form-group form-group-sm">
+					<label class="control-label col-xs-5" for="traffic_left">剩余流量(MB)</label>
+					<div class="col-xs-7">
+						<input type="number" class="form-control input-sm" name="traffic_left" placeholder="剩余流量" value="@model.traffic_left">
+					</div>
+				</div>
+				<div class="form-group form-group-sm">
+					<label class="control-label col-xs-5" for="expiration_date">过期日期</label>
+					<div class="col-xs-7">
+						<input type="text" class="form-control input-sm" name="expiration_date" placeholder="过期日期" value="@model.expiration_date"
+						    data-provide="datepicker">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-primary btn-sm">保存</button>
+					<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">关闭</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>

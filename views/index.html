@@ -1,0 +1,65 @@
+@html.extend('layout', function(model) {
+	@html.block('content', function(model) {
+		<nav class="navbar navbar-inverse navbar-collapse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header col-sm-3">					
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="/">@model.title</a>
+				</div>
+				@if(model.isLoggedIn) {
+					<div class="collapse navbar-collapse" id="navbar">
+						<ul class="nav navbar-nav" id="navbar">
+							@if(model.isAdmin) {
+								<li class="active"><a href="/admin"><i class="fa fa-area-chart fa-lg"></i>管理界面</a></li>
+							} else if(model.isUser) {
+								<li class="active"><a href="/admin"><i class="fa fa-area-chart fa-lg"></i>用户界面</a></li>
+							}
+						</ul>
+					</div>
+				}
+			</div>
+		</nav>
+		<div class="container">
+			@if(!model.isLoggedIn) {
+				<form id="login-form" class="col-sm-3" method="POST" action="/login">
+					<div class="form-group">
+						<label for="login-port">端口</label>
+						<input type="number" class="form-control input-sm" name="login-port" placeholder="SS 端口">
+					</div>
+					<div class="form-group">
+						<label for="login-password">密码</label>
+						<input type="password" class="form-control input-sm" name="login-password" placeholder="SS 密码">
+					</div>					
+					<div class="form-group">
+						<button type="submit" class="btn btn-default btn-sm">登录</button>
+					</div>					
+				</form>
+			}
+		</div>
+		@html.include('footer')
+	})
+
+	@html.block('scripts', function(model) {
+	<script>
+		$(document).ready(function(e) {
+			$('#login-form').on('submit', function(e) {
+				e.preventDefault();
+				
+				$(this).ajaxSubmit({
+					success: function(data) {
+						toastr.success(data.message);
+						window.setTimeout(function() { window.location.href = data.url; }, 1000);
+					}
+				});
+
+				return false;
+			});
+		});
+	</script>
+	})
+})

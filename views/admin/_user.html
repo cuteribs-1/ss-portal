@@ -1,0 +1,88 @@
+<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-body">
+			<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+			<ul class="nav nav-tabs">
+				<li role="presentation" class="active"><a href="#info" data-toggle="tab">账号信息</a></li>
+				<li role="presentation"><a href="#stats" data-toggle="tab">流量状态</a></li>
+			</ul>
+			<div class="tab-content">
+				<div class="tab-pane active" id="info">
+					<form id="edit-form" method="POST" action="/admin/editUser" class="form-horizontal">
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="is_active">状态</label>
+							<div class="col-xs-7">
+								@if(model.is_active == 1){
+								<label class="radio-inline">
+									<input type="radio" name="is_active" value="1" checked> 启用
+								</label>
+								<label class="radio-inline">
+									<input type="radio" name="is_active" value="0"> 停用
+								</label> }else{
+								<label class="radio-inline">
+									<input type="radio" name="is_active" value="1"> 启用
+								</label>
+								<label class="radio-inline">
+									<input type="radio" name="is_active" value="0" checked> 停用
+								</label> }
+							</div>
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="port">端口</label>
+							<div class="col-xs-7">
+								<input type="number" class="form-control input-sm" placeholder="SS 端口" disabled value="@model.port">
+								<input type="hidden" name="port" value="@model.port" />
+							</div>
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="password">密码</label>
+							<div class="col-xs-7">
+								<input type="text" class="form-control input-sm" name="password" placeholder="SS 密码" value="@model.password">
+							</div>
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="traffic_limit">流量限制</label>
+							<div class="col-xs-7">
+								<input type="number" class="form-control input-sm" name="traffic_limit" placeholder="流量限制" value="@model.traffic_limit">
+							</div>
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="traffic_left">剩余流量</label>
+							<div class="col-xs-7">
+								<input type="number" class="form-control input-sm" name="traffic_left" placeholder="剩余流量" value="@model.traffic_left">
+							</div>
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="expiration_date">过期日期</label>
+							<div class="col-xs-7">
+								<input type="text" class="form-control input-sm" name="expiration_date" placeholder="过期日期" value="@model.expiration_date"
+								    data-provide="datepicker">
+							</div>
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label col-xs-5" for="created_date">创建时间</label>
+							<div class="col-xs-7">
+								<input type="text" class="form-control input-sm" placeholder="过期日期" disabled value="@model.created_date">
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-primary btn-sm">保存</button>
+							<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">关闭</button>
+						</div>
+					</form>
+				</div>
+				<div class="tab-pane" id="stats">
+					<div class="btn-group switch-buttons" role="group">
+						<button type="button" class="btn btn-default btn-sm active" data-toggle="button" data-type="hours">最近 24 小时</button>
+						<button type="button" class="btn btn-default btn-sm" data-toggle="button" data-type="days">最近 7 天</button>
+						<button type="button" class="btn btn-default btn-sm" data-toggle="button" data-type="months">最近 12 个月</button>
+					</div>
+					<div id="chart" data-url="/admin/chart" data-port="@model.port" data-type="hours" style="min-width: 270px; min-height: 450px;"></div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">关闭</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

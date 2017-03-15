@@ -1,0 +1,264 @@
+@html.extend('layout', function(model) { @html.block('head', function(model) {
+<link rel="stylesheet" href="/css/dataTables.bootstrap.css">
+<link rel="stylesheet" href="/css/highcharts.css">
+<link rel="stylesheet" href="/css/bootstrap-datepicker.css"> }) @html.block('content', function(model) {
+<nav class="navbar navbar-inverse navbar-collapse navbar-fixed-top">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+			<span class="navbar-brand">@model.title</span>
+		</div>
+		<div class="collapse navbar-collapse" id="navbar">
+			<ul class="nav navbar-nav" id="navbar">
+				<li><a href="/admin" title="状态"><i class="fa fa-area-chart fa-lg"></i></a></li>
+				<li class="active"><a href="#" title="用户"><i class="fa fa-users fa-lg"></i></a></li>
+				<li><a href="/admin/settings" title="设置"><i class="fa fa-gear fa-lg"></i></a></li>
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container">
+	<button id="new-button" class="btn btn-primary btn-sm">新用户</button>
+	<table id="users-table" class="table table-striped table-hover table-condensed" data-url="/admin/userList">
+	</table>
+</div>
+<div id="user-modal" class="modal fade" data-url="/admin/user"></div>
+@html.include('footer') }) @html.block('scripts', function(model) {
+<script src="/js/jquery.dataTables.js"></script>
+<script src="/js/dataTables.bootstrap.js"></script>
+<script src="/js/highCharts.js"></script>
+<script src="/js/bootstrap-datepicker.js"></script>
+<script src="/js/bootstrap-datepicker.zh-CN.js"></script>
+<script>
+	$(document).ready(function () {
+		$.fn.datepicker.defaults.format = "yyyy-mm-dd";
+		$.fn.datepicker.defaults.weekStart = 7;
+		$.fn.datepicker.defaults.startView = 1;
+		$.fn.datepicker.defaults.maxViewMode = 2;
+		$.fn.datepicker.defaults.autoclose = true;
+		$.fn.datepicker.defaults.language = 'zh-CN';
+
+		var $modal = $('#user-modal');
+
+		var $table = $('#users-table').DataTable({
+			dom: '<"top"f>rt<"bottom"p><"clear">',
+			ordering: false,
+			processing: true,
+			paging: true,
+			ajax: {
+				url: $('#users-table').data('url'),
+				type: 'POST'
+			},
+			columns: [{
+					title: '端口',
+					data: 'port'
+				},
+				{
+					title: '剩余流量',
+					data: 'traffic_left',
+					searchable: false,
+					render: function (val) {
+						return formatTraffic(val);
+					}
+				},
+				{
+					title: '过期日期',
+					data: 'expiration_date',
+					searchable: false
+				}
+			],
+			createdRow: function (row, data, dataIndex) {
+				if (data['is_active'] == 0) {
+					$(row).addClass('danger');
+				}
+			}
+		}).on('click', 'tbody tr', function (e) {
+			e.preventDefault();
+			var port = $(this).find('td:first').text();
+			$.ajax({
+				url: $modal.data('url'),
+				cache: false,
+				data: {
+					port: port
+				}
+			}).done(function (data, status, xhr) {
+				$modal.html(data).modal('show');
+
+				$modal.find('input[name="is_active"]').each(function () {
+
+				});
+
+				$modal.find('form').ajaxForm({
+					success: function (data) {
+						toastr.success(data);
+						$modal.modal('hide');
+						$table.ajax.reload();
+					}
+				});
+
+				var hc = Highcharts.chart('chart', {
+					chart: {
+						type: 'column',
+						inverted: true
+					},
+					title: {
+						text: '流量走势'
+					},
+					yAxis: {
+						title: {
+							text: '流量 (MB)'
+						}
+					},
+					tooltip: {
+						valueSuffix: ' MB'
+					},
+					credits: {
+						enabled: false
+					},
+					series: [{
+						name: '流量',
+						showInLegend: false
+					}]
+				});
+
+				var $chart = $('#chart');
+
+				var switchChart = function (type) {
+					$chart.data('type', type);
+
+					$.ajax({
+						url: $chart.data('url'),
+						data: {
+							'port': $chart.data('port'),
+							'type': $chart.data('type')
+						},
+						method: 'GET',
+						cache: false
+					}).done(function (data, status, xhr) {
+						if (data && data.rows) {
+							var subTitle;
+							var categories = [];
+							var seriesData = [];
+							var categoryFormatter;
+
+							switch (data.type) {
+								case 'months':
+									subTitle = '最近 12 个月';
+									categoryFormatter = function (dataString) {
+										return dataString.substr(2, 7).replace('-', '年').concat('月');
+									};
+									break;
+								case 'days':
+									subTitle = '最近 7 天';
+									categoryFormatter = function (dataString) {
+										return dataString.substr(5, 5).replace('-', '月').concat('日');
+									};
+									break;
+								case 'hours':
+								default:
+									subTitle = '最近 24 小时';
+									categoryFormatter = function (dataString) {
+										return dataString.substr(8, 5).replace(' ', '日').concat('时');
+									};
+									break;
+							}
+
+							for (var i = 0; i < data.rows.length; i++) {
+								categories.push(categoryFormatter(data.rows[i].log_date));
+								seriesData.push(data.rows[i].amount);
+							}
+
+							hc.update({
+								// subtitle: { text: subTitle },
+								xAxis: {
+									categories: categories
+								},
+								series: [{
+									data: seriesData
+								}]
+							});
+						}
+					});
+				}
+
+				$('.switch-buttons button').on('click', function (e) {
+					e.preventDefault();
+					var $this = $(this);
+					$this.siblings().removeClass('active');
+					switchChart($(this).data('type'));
+				});
+
+				switchChart('hours');
+			});
+		});
+
+		var formatTraffic = function (amount) {
+			if (amount == undefined) {
+				return '';
+			} else if (amount == 0) {
+				return 0;
+			}
+
+			var tb = Math.pow(2, 20);
+			var gb = Math.pow(2, 10);
+
+			if (amount > tb) {
+				return (amount / tb).toFixed(2) + 'TB';
+			} else if (amount > gb) {
+				return (amount / gb).toFixed(2) + 'GB';
+			} else {
+				return amount.toFixed(2) + 'MB';
+			}
+		};
+
+		$('#new-button').on('click', function (e) {
+			e.preventDefault();
+			$.ajax({
+				url: $modal.data('url'),
+				cache: false,
+				data: {
+					port: -1
+				}
+			}).done(function (data, status, xhr) {
+				$modal.html(data).modal('show');
+				$modal.find('form').ajaxForm({
+					success: function (data) {
+						toastr.success(data.message);
+						$('#user-modal').modal('hide');
+						$table.ajax.reload();
+					}
+				});
+			});
+		});
+
+		$modal.on('click', '.view-password', function () {
+			var $this = $(this);
+			var $password = $('input[name="password"]');
+
+			if ($this.hasClass('fa-eye')) {
+				$password.attr('type', 'text');
+				$this.removeClass('fa-eye');
+				$this.addClass('fa-eye-slash');
+			} else {
+				$password.attr('type', 'password');
+				$this.addClass('fa-eye');
+				$this.removeClass('fa-eye-slash');
+			}
+		});
+
+		Highcharts.setOptions({
+			lang: {
+				months: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+				weekdays: ['周一', '周二', '周三', '周四', '周五', '周六', '周天'],
+				numericSymbolMagnitude: 10000,
+				numericSymbols: ['万', '亿']
+			}
+		});
+	});
+</script>
+}) })
